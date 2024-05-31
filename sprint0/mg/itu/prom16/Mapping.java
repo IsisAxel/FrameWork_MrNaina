@@ -1,5 +1,6 @@
 package mg.itu.prom16;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class Mapping {
@@ -22,4 +23,8 @@ public class Mapping {
         this.method = method;
     }
     
+    public String invokeStringMethod() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException, NoSuchMethodException, SecurityException
+    {
+        return (String)this.getMethod().invoke(this.getControlleClass().getDeclaredConstructor().newInstance());
+    }
 }

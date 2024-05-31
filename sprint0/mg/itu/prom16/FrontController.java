@@ -40,10 +40,12 @@ public class FrontController extends HttpServlet {
                 String path = request.getServletPath().trim();
                 Mapping map = controllerList.get(path);
                 if (map!=null) {
-                    out.println(map.getMethod().getName()+"--"+map.getControlleClass().getSimpleName());    
+                    out.println("Nom de la metode : "+map.getMethod().getName()+"<br>Nom de la Classe : "+map.getControlleClass().getSimpleName()+"<br>");  
+                    String t = map.invokeStringMethod();
+                    out.println("Invocation de la methode : "+t);
                 }
                 else{
-                    out.println("Tsisy eh");    
+                    out.println("Tsisy eh<br>");    
                 }
                 
                 
