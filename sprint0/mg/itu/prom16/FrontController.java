@@ -3,10 +3,11 @@ package mg.itu.prom16;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import mg.itu.prom16.ClassScanner;
 import mg.itu.prom16.Controller;
 import mg.itu.prom16.Mapping;
+import mg.itu.prom16.ModelView;
 
 public class FrontController extends HttpServlet {
 
@@ -40,9 +42,26 @@ public class FrontController extends HttpServlet {
                 String path = request.getServletPath().trim();
                 Mapping map = controllerList.get(path);
                 if (map!=null) {
-                    out.println("Nom de la metode : "+map.getMethod().getName()+"<br>Nom de la Classe : "+map.getControlleClass().getSimpleName()+"<br>");  
-                    String t = map.invokeStringMethod();
-                    out.println("Invocation de la methode : "+t);
+                    Object instance = map.getControlleClass().getDeclaredConstructor().newInstance();
+                    Object valueFunction = map.getMethod().invoke(instance);
+                    if (valueFunction instanceof ModelView) {
+
+                        ModelView modelAndView = (ModelView)valueFunction;
+        
+                        String nameView = modelAndView.getViewName();
+                        HashMap<String, Object> listKeyAndValue = modelAndView.getData();
+        
+                        for (Map.Entry<String, Object> maap : listKeyAndValue.entrySet()) {
+                            request.setAttribute(maap.getKey(),  maap.getValue());
+                        }
+        
+                        RequestDispatcher dispatcher = request.getRequestDispatcher(nameView);
+                        dispatcher.forward(request, response);
+                    } else {
+                        out.println("Nom de la metode : "+map.getMethod().getName()+"<br>Nom de la Classe : "+map.getControlleClass().getSimpleName()+"<br>");  
+                        String t = map.invokeStringMethod();
+                        out.println("Invocation de la methode : "+t);
+                    }
                 }
                 else{
                     out.println("Tsisy eh<br>");    
