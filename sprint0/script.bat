@@ -14,8 +14,8 @@ for /R "%APP_DIR%" %%G IN (*.java) DO (
 )
 
 REM Compiler les classes Java
-javac -cp "%LIB_DIR%\*" -d "%APP_DIR%classes" %APP_DIR%tempjava\*.java
-ECHO javac -cp "%LIB_DIR%\*" -d "%APP_DIR%classes" %APP_DIR%tempjava\*.java
+javac -parameters -cp "%LIB_DIR%\*" -d "%APP_DIR%classes" %APP_DIR%tempjava\*.java
+ECHO javac -parameters -cp "%LIB_DIR%\*" -d "%APP_DIR%classes" %APP_DIR%tempjava\*.java
 
 
 jar cvf framework.jar -C "%APP_DIR%classes" .
