@@ -2,6 +2,10 @@ package mg.itu.prom16;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 
 public class Mapping {
     Class<?> ControlleClass;    

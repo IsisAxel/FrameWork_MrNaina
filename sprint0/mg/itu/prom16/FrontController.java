@@ -27,7 +27,7 @@ public class FrontController extends HttpServlet {
         try {
             controllerList=ClassScanner.getMapping(getInitParameter("basePackage"), annClass);
         } catch (Exception e) {
-            throw new ServletException(e);
+            throw new Error("Duplicate URL",e);
         }
     }
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -42,8 +42,7 @@ public class FrontController extends HttpServlet {
                 String path = request.getServletPath().trim();
                 Mapping map = controllerList.get(path);
                 if (map!=null) {
-                    Object instance = map.getControlleClass().getDeclaredConstructor().newInstance();
-                    Object valueFunction = map.getMethod().invoke(instance);
+                    Object valueFunction = map.getMethod().invoke(map.getControlleClass().getDeclaredConstructor().newInstance());
                     if (valueFunction instanceof ModelView) {
 
                         ModelView modelAndView = (ModelView)valueFunction;
@@ -54,17 +53,18 @@ public class FrontController extends HttpServlet {
                         for (Map.Entry<String, Object> maap : listKeyAndValue.entrySet()) {
                             request.setAttribute(maap.getKey(),  maap.getValue());
                         }
-        
+
                         RequestDispatcher dispatcher = request.getRequestDispatcher(nameView);
                         dispatcher.forward(request, response);
+                    } else if (valueFunction instanceof String) {
+                        out.println("Nom de la metode : "+map.getMethod().getName()+"<br>Nom de la Classe : "+map.getControlleClass().getSimpleName()+"<br>"); 
+                        out.println("Invocation de la methode : "+valueFunction);
                     } else {
-                        out.println("Nom de la metode : "+map.getMethod().getName()+"<br>Nom de la Classe : "+map.getControlleClass().getSimpleName()+"<br>");  
-                        String t = map.invokeStringMethod();
-                        out.println("Invocation de la methode : "+t);
+                        throw new Error(new ServletException("Unsupported return type"));
                     }
                 }
                 else{
-                    out.println("Tsisy eh<br>");    
+                    response.sendError(404);   
                 }
                 
                 

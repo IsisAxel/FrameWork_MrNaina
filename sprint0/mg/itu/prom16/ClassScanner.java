@@ -15,7 +15,7 @@ import mg.itu.prom16.Mapping;
 import mg.itu.prom16.Get;
 public class ClassScanner {
 
-    public static Map<String,Mapping> getMapping(String packageName,Class<? extends Annotation> annotationClass) throws ClassNotFoundException, IOException {
+    public static Map<String,Mapping> getMapping(String packageName,Class<? extends Annotation> annotationClass) throws Exception{
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         String packagePath = packageName.replace(".", "/");
         Enumeration<URL> resources = classLoader.getResources(packagePath);
@@ -38,13 +38,15 @@ public class ClassScanner {
         }
         return map;
     }    
-    private static Map<String,Mapping> getMethods(Class<?> clazz) {
+    private static Map<String,Mapping> getMethods(Class<?> clazz) throws Exception{
         
         Map<String,Mapping> methods = new HashMap<String,Mapping>();
         for (Method method : clazz.getDeclaredMethods()) {
             Get an= method.getAnnotation(Get.class);
-
             if(an!=null&& !an.url().isEmpty()){
+                if(methods.containsKey(an.url())){
+                    throw new Exception("Duplicate url");
+                }
                 methods.put(an.url().trim(),new Mapping(clazz,method));
             }
         }
