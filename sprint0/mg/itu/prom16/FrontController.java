@@ -42,7 +42,7 @@ public class FrontController extends HttpServlet {
                 String path = request.getServletPath().trim();
                 Mapping map = controllerList.get(path);
                 if (map!=null) {
-                    Object valueFunction = map.getMethod().invoke(map.getControlleClass().getDeclaredConstructor().newInstance());
+                    Object valueFunction = map.invoke(request);
                     if (valueFunction instanceof ModelView) {
 
                         ModelView modelAndView = (ModelView)valueFunction;

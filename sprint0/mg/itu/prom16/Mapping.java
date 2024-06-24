@@ -31,4 +31,17 @@ public class Mapping {
     {
         return (String)this.getMethod().invoke(this.getControlleClass().getDeclaredConstructor().newInstance());
     }
+
+    public Object invoke(HttpServletRequest request) throws ServletException
+    {
+        try {
+            Object ob = getControlleClass().getDeclaredConstructor().newInstance();
+            Method method = getMethod();
+            Map<String,String> params = ServletUtil.extractParameters(request);
+            Object[] args = ServletUtil.getMethodArguments(method, params);
+            return method.invoke(ob, args);
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
 }
