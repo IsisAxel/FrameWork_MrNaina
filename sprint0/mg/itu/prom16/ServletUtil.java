@@ -31,21 +31,42 @@ public abstract class ServletUtil {
         for (int i = 0; i < parameters.length; i++) {
             Parameter parameter = parameters[i];
             ReqParam reqParam = parameter.getAnnotation(ReqParam.class);
-            String paramName = "";
-            if (reqParam == null || reqParam.value().isEmpty()) {
-                paramName = parameter.getName();
+            ReqBody reqBody = parameter.getAnnotation(ReqBody.class);
+            if(reqBody != null){
+                try {                
+                    Constructor<?> constructor = parameter.getType().getDeclaredConstructor();
+                    Object obj = constructor.newInstance();
+                    
+                    for (Field field : obj.getClass().getDeclaredFields()) {
+                        String fieldName = field.getName();
+                        String paramValue = params.get(fieldName);
+                        if (paramValue != null) {
+                            field.setAccessible(true);
+                            field.set(obj, TypeConverter.convert(paramValue, field.getType()));
+                        }
+                    }
+                    arguments[i] = obj;
+                } catch (Exception e) {
+                    throw e;
+                }
             } else {
-                paramName = reqParam.value();
-            }
+                String paramName = "";
+                if (reqParam == null || reqParam.value().isEmpty()) {
+                    paramName = parameter.getName();
+                } else {
+                    paramName = reqParam.value();
+                }
 
-            String paramValue = params.get(paramName);
+                System.out.println("Name = " + paramName);
+                String paramValue = params.get(paramName);
 
- 	    if (paramValue != null) {
-                arguments[i] = TypeConverter.convert(paramValue, parameter.getType());
-            } else {
-                arguments[i] = null;
-                if (isBooleanType(parameter)) {
-                    arguments[i] = false;
+                if (paramValue != null) {
+                    arguments[i] = TypeConverter.convert(paramValue, parameter.getType());
+                } else {
+                    arguments[i] = null;
+                    if (isBooleanType(parameter)) {
+                        arguments[i] = false;
+                    }
                 }
             }
         }
