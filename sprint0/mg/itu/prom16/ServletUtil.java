@@ -24,7 +24,7 @@ public abstract class ServletUtil {
         return parameters;
     }
 
-    public static Object[] getMethodArguments(Method method, Map<String, String> params) throws Exception {
+    public static Object[] getMethodArguments(Method method, Map<String, String> params) throws IllegalArgumentException ,Exception {
         Parameter[] parameters = method.getParameters();
         Object[] arguments = new Object[parameters.length];
 
@@ -32,7 +32,13 @@ public abstract class ServletUtil {
             Parameter parameter = parameters[i];
             ReqParam reqParam = parameter.getAnnotation(ReqParam.class);
             ReqBody reqBody = parameter.getAnnotation(ReqBody.class);
-            if(reqBody != null){
+
+            if(reqBody == null && reqParam == null){
+                System.out.println(reqParam);
+                System.out.println(reqBody);
+                throw new IllegalArgumentException("ETU002442 : Veuillez annoter touts les arguments de votre fonction");
+            }
+            else if(reqBody != null){
                 try {                
                     Constructor<?> constructor = parameter.getType().getDeclaredConstructor();
                     Object obj = constructor.newInstance();
@@ -51,7 +57,7 @@ public abstract class ServletUtil {
                 }
             } else {
                 String paramName = "";
-                if (reqParam == null || reqParam.value().isEmpty()) {
+                if (reqParam.value().isEmpty()) {
                     paramName = parameter.getName();
                 } else {
                     paramName = reqParam.value();
@@ -59,7 +65,7 @@ public abstract class ServletUtil {
 
                 System.out.println("Name = " + paramName);
                 String paramValue = params.get(paramName);
-
+              
                 if (paramValue != null) {
                     arguments[i] = TypeConverter.convert(paramValue, parameter.getType());
                 } else {
@@ -71,6 +77,26 @@ public abstract class ServletUtil {
             }
         }
         return arguments;
+    }
+
+    public static void processSession(Object obj, HttpServletRequest request) throws Exception {
+        Class<?> clazz = obj.getClass();
+        Field[] fields = clazz.getDeclaredFields();
+
+        for (Field field : fields) {
+            if (field.getType().equals(MySession.class)) {
+                field.setAccessible(true);
+                Object sessionInstance = field.get(obj);
+                if (sessionInstance == null) {
+                    sessionInstance = MySession.class.getDeclaredConstructor().newInstance();
+                    field.set(obj, sessionInstance);
+                }
+
+                MySession session = (MySession) sessionInstance;
+                session.setSession(request.getSession());
+                break;
+            }
+        }
     }
 
     private static boolean isBooleanType(Parameter parameter) {

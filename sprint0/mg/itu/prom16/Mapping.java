@@ -32,15 +32,17 @@ public class Mapping {
         return (String)this.getMethod().invoke(this.getControlleClass().getDeclaredConstructor().newInstance());
     }
 
-    public Object invoke(HttpServletRequest request) throws ServletException
+    public Object invoke(HttpServletRequest request) throws ServletException , IllegalArgumentException
     {
         try {
             Object ob = getControlleClass().getDeclaredConstructor().newInstance();
             Method method = getMethod();
             Map<String,String> params = ServletUtil.extractParameters(request);
             Object[] args = ServletUtil.getMethodArguments(method, params);
+            ServletUtil.processSession(ob, request);
             return method.invoke(ob, args);
-        } catch (Exception e) {
+        }catch (Exception e) {
+            System.out.println("asndash");
             throw new ServletException(e);
         }
     }

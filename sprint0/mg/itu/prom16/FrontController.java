@@ -42,7 +42,14 @@ public class FrontController extends HttpServlet {
                 String path = request.getServletPath().trim();
                 Mapping map = controllerList.get(path);
                 if (map!=null) {
-                    Object valueFunction = map.invoke(request);
+                    Object valueFunction = null;
+                    try {
+                        System.out.println("ddddd");
+                        valueFunction = map.invoke(request);
+                    } catch (Exception e) {
+                        System.out.println("ssssss");
+                        throw new Error(e);
+                    }
                     if (valueFunction instanceof ModelView) {
 
                         ModelView modelAndView = (ModelView)valueFunction;
@@ -71,6 +78,7 @@ public class FrontController extends HttpServlet {
                 out.println("</body></html>");
             }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ServletException(e);    
         }
     }
