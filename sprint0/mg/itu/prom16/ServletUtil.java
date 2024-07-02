@@ -33,7 +33,6 @@ public abstract class ServletUtil {
             ReqParam reqParam = parameter.getAnnotation(ReqParam.class);
             ReqBody reqBody = parameter.getAnnotation(ReqBody.class);
 
-
             if(reqBody == null && reqParam == null){
                 System.out.println(reqParam);
                 System.out.println(reqBody);
@@ -66,7 +65,7 @@ public abstract class ServletUtil {
 
                 System.out.println("Name = " + paramName);
                 String paramValue = params.get(paramName);
-
+              
                 if (paramValue != null) {
                     arguments[i] = TypeConverter.convert(paramValue, parameter.getType());
                 } else {
