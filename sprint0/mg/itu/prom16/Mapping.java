@@ -32,6 +32,11 @@ public class Mapping {
         return (String)this.getMethod().invoke(this.getControlleClass().getDeclaredConstructor().newInstance());
     }
 
+    public boolean isRestAPI()
+    {
+        return this.getMethod().isAnnotationPresent(RestAPI.class);
+    }
+
     public Object invoke(HttpServletRequest request) throws ServletException , IllegalArgumentException
     {
         try {
