@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.lang.reflect.Method;
 
 import mg.itu.prom16.Mapping;
-import mg.itu.prom16.Get;
 public class ClassScanner {
 
     public static Map<String,Mapping> getMapping(String packageName,Class<? extends Annotation> annotationClass) throws Exception{
@@ -42,15 +41,40 @@ public class ClassScanner {
         
         Map<String,Mapping> methods = new HashMap<String,Mapping>();
         for (Method method : clazz.getDeclaredMethods()) {
-            Get an= method.getAnnotation(Get.class);
-            if(an!=null&& !an.url().isEmpty()){
-                if(methods.containsKey(an.url())){
-                    throw new Exception("Duplicate url");
+            mg.itu.prom16.URL an= method.getAnnotation(mg.itu.prom16.URL.class);
+            String link = an.url();
+            if(an!=null && !link.isEmpty()){
+                String verb = getVerb(method);
+
+                if(methods.containsKey(link)){
+                    Mapping map = methods.get(link);
+                    HashMap<String, Method> apiRequests = map.getMethods();
+  
+                    if (!apiRequests.containsKey(verb)) {
+                       apiRequests.put(verb, method);
+                       methods.put(link, map);
+                    }
+                    else {
+                        throw new Exception("Duplicate url for verb = "+verb+" and link = "+link);
+                    }
+                } else {
+                    HashMap<String, Method> apiRequests = new HashMap<String, Method>();
+                    apiRequests.put(verb, method);
+                    Mapping mapping = new Mapping(clazz, apiRequests);
+  
+                    methods.put(link, mapping);
                 }
-                methods.put(an.url().trim(),new Mapping(clazz,method));
             }
         }
         return methods;
+    }
+
+    public static String getVerb(Method m)
+    {
+        if (m.isAnnotationPresent(Post.class)) {
+            return "POST";
+        }
+        return "GET";
     }
     
 }

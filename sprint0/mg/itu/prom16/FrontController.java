@@ -51,9 +51,11 @@ public class FrontController extends HttpServlet {
                         valueFunction = map.invoke(request);
                     } catch (Exception e) {
                         System.out.println("ssssss");
+                        e.printStackTrace();
                         throw new Error(e);
                     }
-                    if (map.isRestAPI()) {
+                  
+                    if (map.isRestAPI(request)) {
                         response.setContentType("text/json");
                         if (valueFunction instanceof ModelView) {
                             ModelView modelAndView = (ModelView)valueFunction;
