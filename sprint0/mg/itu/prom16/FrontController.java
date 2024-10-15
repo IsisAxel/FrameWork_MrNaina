@@ -12,6 +12,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.google.gson.Gson;
+
 import mg.itu.prom16.ClassScanner;
 import mg.itu.prom16.Controller;
 import mg.itu.prom16.Mapping;
@@ -37,8 +40,8 @@ public class FrontController extends HttpServlet {
             response.setContentType("text/html");
 
             try (PrintWriter out = response.getWriter()) {
-                out.println("<html><body>");
-                out.println("<h1>Servlet Path: " + request.getServletPath() + "</h1>");
+                // out.println("<html><body>");
+                // out.println("<h1>Servlet Path: " + request.getServletPath() + "</h1>");
                 String path = request.getServletPath().trim();
                 Mapping map = controllerList.get(path);
                 if (map!=null) {
@@ -48,26 +51,39 @@ public class FrontController extends HttpServlet {
                         valueFunction = map.invoke(request);
                     } catch (Exception e) {
                         System.out.println("ssssss");
+                        e.printStackTrace();
                         throw new Error(e);
                     }
-                    if (valueFunction instanceof ModelView) {
-
-                        ModelView modelAndView = (ModelView)valueFunction;
-        
-                        String nameView = modelAndView.getViewName();
-                        HashMap<String, Object> listKeyAndValue = modelAndView.getData();
-        
-                        for (Map.Entry<String, Object> maap : listKeyAndValue.entrySet()) {
-                            request.setAttribute(maap.getKey(),  maap.getValue());
+                    if (map.isRestAPI(request)) {
+                        response.setContentType("text/json");
+                        if (valueFunction instanceof ModelView) {
+                            ModelView modelAndView = (ModelView)valueFunction;
+                            response.getWriter().write(new Gson().toJson(modelAndView.getData()));
+                        } else if (valueFunction instanceof String) {
+                            response.getWriter().write(new Gson().toJson(valueFunction));
+                        } else {
+                            throw new Error(new ServletException("Unsupported return type"));
                         }
-
-                        RequestDispatcher dispatcher = request.getRequestDispatcher(nameView);
-                        dispatcher.forward(request, response);
-                    } else if (valueFunction instanceof String) {
-                        out.println("Nom de la metode : "+map.getMethod().getName()+"<br>Nom de la Classe : "+map.getControlleClass().getSimpleName()+"<br>"); 
-                        out.println("Invocation de la methode : "+valueFunction);
                     } else {
-                        throw new Error(new ServletException("Unsupported return type"));
+                        if (valueFunction instanceof ModelView) {
+
+                            ModelView modelAndView = (ModelView)valueFunction;
+            
+                            String nameView = modelAndView.getViewName();
+                            HashMap<String, Object> listKeyAndValue = modelAndView.getData();
+            
+                            for (Map.Entry<String, Object> maap : listKeyAndValue.entrySet()) {
+                                request.setAttribute(maap.getKey(),  maap.getValue());
+                            }
+    
+                            RequestDispatcher dispatcher = request.getRequestDispatcher(nameView);
+                            dispatcher.forward(request, response);
+                        } else if (valueFunction instanceof String) {
+                            // out.println("Nom de la metode : "+map.getMethod().getName()+"<br>Nom de la Classe : "+map.getControlleClass().getSimpleName()+"<br>"); 
+                            out.println(valueFunction);
+                        } else {
+                            throw new Error(new ServletException("Unsupported return type"));
+                        }
                     }
                 }
                 else{
@@ -75,7 +91,7 @@ public class FrontController extends HttpServlet {
                 }
                 
                 
-                out.println("</body></html>");
+                // out.println("</body></html>");
             }
         } catch (Exception e) {
             e.printStackTrace();

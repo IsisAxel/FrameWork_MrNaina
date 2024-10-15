@@ -2,6 +2,7 @@ package mg.itu.prom16;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -9,10 +10,10 @@ import javax.servlet.http.HttpServletRequest;
 
 public class Mapping {
     Class<?> ControlleClass;    
-    Method method;
-    public Mapping(Class<?> controlleClass, Method method) {
+    HashMap<String,Method> methods;
+    public Mapping(Class<?> controlleClass, HashMap<String,Method> methods) {
         ControlleClass = controlleClass;
-        this.method = method;
+        this.methods = methods;
     }
     public Class<?> getControlleClass() {
         return ControlleClass;
@@ -20,23 +21,40 @@ public class Mapping {
     public void setControlleClass(Class<?> controlleClass) {
         ControlleClass = controlleClass;
     }
-    public Method getMethod() {
-        return method;
+    public HashMap<String,Method> getMethods() {
+        return methods;
     }
-    public void setMethod(Method method) {
-        this.method = method;
+    public void setMethods(HashMap<String,Method> methods) {
+        this.methods = methods;
     }
     
-    public String invokeStringMethod() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException, NoSuchMethodException, SecurityException
+    public String invokeStringMethod(HttpServletRequest req) throws Exception
     {
-        return (String)this.getMethod().invoke(this.getControlleClass().getDeclaredConstructor().newInstance());
+        String verb = req.getMethod();
+        HashMap<String,Method> map = getMethods();
+        if (!verb.equals(ClassScanner.getVerb(map.get(verb)))) {
+            throw new Exception("Invalid verb for this link");
+        }
+        return (String)map.get(verb).invoke(this.getControlleClass().getDeclaredConstructor().newInstance());
     }
 
-    public Object invoke(HttpServletRequest request) throws ServletException , IllegalArgumentException
+    public boolean isRestAPI(HttpServletRequest req) throws Exception
+    {
+        String verb = req.getMethod();
+        HashMap<String,Method> map = getMethods();
+        return map.get(verb).isAnnotationPresent(RestAPI.class);
+    }
+
+    public Object invoke(HttpServletRequest request) throws Exception
     {
         try {
+            String verb = request.getMethod();
+            HashMap<String,Method> map = getMethods();
+            Method method =  map.get(verb);
+            if (!verb.equals(ClassScanner.getVerb(method))) {
+                throw new Exception("Invalid verb for this link");
+            }
             Object ob = getControlleClass().getDeclaredConstructor().newInstance();
-            Method method = getMethod();
             Map<String,String> params = ServletUtil.extractParameters(request);
             Object[] args = ServletUtil.getMethodArguments(method, params);
             ServletUtil.processSession(ob, request);
