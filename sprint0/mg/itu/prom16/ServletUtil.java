@@ -4,6 +4,7 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -11,6 +12,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public abstract class ServletUtil {
@@ -24,7 +26,7 @@ public abstract class ServletUtil {
         return parameters;
     }
 
-    public static Object[] getMethodArguments(Method method, Map<String, String> params) throws IllegalArgumentException ,Exception {
+    public static Object[] getMethodArguments( HttpServletRequest request, Method method, Map<String, String> params) throws IllegalArgumentException ,Exception {
         Parameter[] parameters = method.getParameters();
         Object[] arguments = new Object[parameters.length];
 
@@ -32,8 +34,9 @@ public abstract class ServletUtil {
             Parameter parameter = parameters[i];
             ReqParam reqParam = parameter.getAnnotation(ReqParam.class);
             ReqBody reqBody = parameter.getAnnotation(ReqBody.class);
+            ReqFile reqFile = parameter.getAnnotation(ReqFile.class);
 
-            if(reqBody == null && reqParam == null){
+            if(reqBody == null && reqParam == null && reqFile == null){
                 System.out.println(reqParam);
                 System.out.println(reqBody);
                 throw new IllegalArgumentException("ETU002442 : Veuillez annoter touts les arguments de votre fonction");
@@ -55,6 +58,8 @@ public abstract class ServletUtil {
                 } catch (Exception e) {
                     throw e;
                 }
+            } else if(reqFile != null){
+                setMultipartFile(parameter, request, arguments , i);
             } else {
                 String paramName = "";
                 if (reqParam.value().isEmpty()) {
@@ -101,5 +106,29 @@ public abstract class ServletUtil {
 
     private static boolean isBooleanType(Parameter parameter) {
         return parameter.getType().equals(boolean.class) || parameter.getType().equals(Boolean.class);
+    }
+
+    private static void setMultipartFile(Parameter argParameter, HttpServletRequest request, Object[] values , int index) throws Exception {
+        ReqFile reqFile = (ReqFile)argParameter.getAnnotation(ReqFile.class);
+        String nameFile = "";
+        if (reqFile != null && !reqFile.value().isEmpty()) {
+            nameFile = reqFile.value();
+        } else {
+            nameFile = argParameter.getName();
+        }
+        int i = 0;
+        Part part = request.getPart(nameFile);
+        if (part == null) {
+            values[i] = null;
+        } else if (argParameter.getType().isAssignableFrom(MultiPartFile.class)) {
+            Class class1 = argParameter.getType();
+            Constructor constructor = class1.getDeclaredConstructor();
+            Object o = constructor.newInstance();
+            MultiPartFile mlprt = (MultiPartFile)o;
+            mlprt.buildInstance(part, "1859");
+            values[i] = mlprt;
+        } else {
+            throw new Exception("Parameter not valid Exception for File!");
+        }
     }
 }

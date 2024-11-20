@@ -56,7 +56,7 @@ public class Mapping {
             }
             Object ob = getControlleClass().getDeclaredConstructor().newInstance();
             Map<String,String> params = ServletUtil.extractParameters(request);
-            Object[] args = ServletUtil.getMethodArguments(method, params);
+            Object[] args = ServletUtil.getMethodArguments(request , method, params);
             ServletUtil.processSession(ob, request);
             return method.invoke(ob, args);
         }catch (Exception e) {
