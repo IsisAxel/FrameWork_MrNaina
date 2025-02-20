@@ -19,6 +19,10 @@ import mg.itu.prom16.ClassScanner;
 import mg.itu.prom16.Controller;
 import mg.itu.prom16.Mapping;
 import mg.itu.prom16.ModelView;
+import mg.itu.prom16.validation.exception.EmailException;
+import mg.itu.prom16.validation.exception.MaxException;
+import mg.itu.prom16.validation.exception.MinException;
+import mg.itu.prom16.validation.exception.NotEmptyException;
 
 public class FrontController extends HttpServlet {
 
@@ -30,7 +34,7 @@ public class FrontController extends HttpServlet {
         try {
             controllerList=ClassScanner.getMapping(getInitParameter("basePackage"), annClass);
         } catch (Exception e) {
-            throw new Error("Duplicate URL",e);
+            throw new Error(e);
         }
     }
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -49,6 +53,10 @@ public class FrontController extends HttpServlet {
                     try {
                         System.out.println("ddddd");
                         valueFunction = map.invoke(request);
+                    } catch(NotEmptyException | EmailException | MinException | MaxException ee){
+                        response.sendError(HttpServletResponse.SC_BAD_REQUEST, ee.getMessage());
+                        ee.printStackTrace();
+                        return;
                     } catch (Exception e) {
                         System.out.println("ssssss");
                         e.printStackTrace();
