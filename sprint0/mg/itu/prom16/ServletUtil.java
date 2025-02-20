@@ -6,6 +6,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+import mg.itu.prom16.validation.annotation.Max;
+import mg.itu.prom16.validation.annotation.Min;
+import mg.itu.prom16.validation.annotation.NotEmpty;
+import mg.itu.prom16.validation.annotation.Validate;
+import mg.itu.prom16.validation.annotation.Email;
+import mg.itu.prom16.validation.exception.*;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -14,6 +20,7 @@ import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public abstract class ServletUtil {
     public static Map<String, String> extractParameters(HttpServletRequest request) {
@@ -51,7 +58,11 @@ public abstract class ServletUtil {
                         String paramValue = params.get(fieldName);
                         if (paramValue != null) {
                             field.setAccessible(true);
-                            field.set(obj, TypeConverter.convert(paramValue, field.getType()));
+                            Object val = TypeConverter.convert(paramValue, field.getType());
+                            field.set(obj, val);
+                            if (parameter.isAnnotationPresent(Validate.class)) {
+                                checkValidation(val, field);
+                            }
                         }
                     }
                     arguments[i] = obj;
@@ -82,6 +93,75 @@ public abstract class ServletUtil {
             }
         }
         return arguments;
+    }
+
+    public static void checkValidation(Object value , Field field) throws Exception
+    {
+        if (field.isAnnotationPresent(NotEmpty.class)) {
+            if (value instanceof String) {
+                String stringValue = (String) value;
+                NotEmpty notEmpty = field.getAnnotation(NotEmpty.class);
+                if (stringValue.trim().isEmpty()) {
+                    String message = notEmpty.message();
+                    if (message.trim().isEmpty()) {
+                        throw new NotEmptyException("Le champ " + field.getName() + " ne doit pas etre vide" );
+                    }
+                    throw new NotEmptyException(message);
+                }
+            } else {
+                throw new NotEmptyException("Le champ " + field.getName() + " doit etre une chaine de caractere" );
+            }
+        }
+        if (field.isAnnotationPresent(Min.class)) {
+            Min min = field.getAnnotation(Min.class);
+            String message = min.message();
+            if (value instanceof Number) {
+                double d = ((Number) value).doubleValue();
+                if (d < min.value()) {
+                    if (message.trim().isEmpty()) {
+                        
+                        throw new MinException("Le champ " + field.getName() + " doit etre superieur a "+min.value());
+                    }
+                    throw new MinException(message);
+                }
+            } else {
+                throw new MinException("Le champ " + field.getName() + " doit etre un nombre ");
+            }
+        }
+        if (field.isAnnotationPresent(Max.class)) {
+            Max max = field.getAnnotation(Max.class);
+            String message = max.message();
+            if (value instanceof Number) {
+                double d = ((Number) value).doubleValue();
+                if (d > max.value()) {
+                    if (message.trim().isEmpty()) {
+                        throw new MaxException("Le champ " + field.getName() + " doit etre inferieur a "+max.value());
+                    }
+                    throw new MaxException(message);
+                }
+            } else {
+                throw new MaxException("Le champ " + field.getName() + " doit etre un nombre ");
+            }
+        } 
+        if (field.isAnnotationPresent(Email.class)) {
+            Email email = field.getAnnotation(Email.class);
+            String message = email.message();
+            if (value instanceof String) {
+                boolean emailValid = isValidEmail(value.toString());
+                if (!emailValid) {
+                    if (message.trim().isEmpty()) {
+                        throw new EmailException("Le champ " + field.getName() + " doit etre un email valide");   
+                    }
+                    throw new EmailException(message);
+                }
+            } else {
+                throw new EmailException("Le champ " + field.getName() + " doit etre une chaine de caractere"); 
+            }
+        }
+    }
+
+    public static boolean isValidEmail(String email) {
+        return Pattern.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", email);
     }
 
     public static void processSession(Object obj, HttpServletRequest request) throws Exception {

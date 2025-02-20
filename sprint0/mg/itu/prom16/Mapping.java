@@ -61,7 +61,7 @@ public class Mapping {
             return method.invoke(ob, args);
         }catch (Exception e) {
             System.out.println("asndash");
-            throw new ServletException(e);
+            throw e;
         }
     }
 }
