@@ -3,6 +3,7 @@ package mg.itu.prom16;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import mg.itu.prom16.ClassScanner;
 import mg.itu.prom16.Controller;
 import mg.itu.prom16.Mapping;
 import mg.itu.prom16.ModelView;
+import mg.itu.prom16.validation.BindingResult;
 import mg.itu.prom16.validation.exception.EmailException;
 import mg.itu.prom16.validation.exception.MaxException;
 import mg.itu.prom16.validation.exception.MinException;
@@ -52,10 +54,8 @@ public class FrontController extends HttpServlet {
                     Object valueFunction = null;
                     try {
                         System.out.println("ddddd");
-                        valueFunction = map.invoke(request);
+                        valueFunction = map.invoke(request,controllerList);
                     } catch(NotEmptyException | EmailException | MinException | MaxException ee){
-                        response.sendError(HttpServletResponse.SC_BAD_REQUEST, ee.getMessage());
-                        ee.printStackTrace();
                         return;
                     } catch (Exception e) {
                         System.out.println("ssssss");
