@@ -3,10 +3,17 @@ package mg.itu.prom16;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+
+import mg.itu.prom16.validation.BindingResult;
+import mg.itu.prom16.validation.exception.EmailException;
+import mg.itu.prom16.validation.exception.MaxException;
+import mg.itu.prom16.validation.exception.MinException;
+import mg.itu.prom16.validation.exception.NotEmptyException;
 
 public class Mapping {
     Class<?> ControlleClass;    
@@ -45,8 +52,21 @@ public class Mapping {
         return map.get(verb).isAnnotationPresent(RestAPI.class);
     }
 
-    public Object invoke(HttpServletRequest request) throws Exception
+    protected static BindingResult containError(Object[] args) {
+        for (Object object : args) {
+            if (object instanceof BindingResult) {
+                BindingResult br = (BindingResult) object;
+                if (br.containError()) {
+                    return br;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Object invoke(HttpServletRequest request , Map<String,Mapping> controllerList) throws Exception
     {
+        BindingResult br = null;
         try {
             String verb = request.getMethod();
             HashMap<String,Method> map = getMethods();
@@ -57,9 +77,14 @@ public class Mapping {
             Object ob = getControlleClass().getDeclaredConstructor().newInstance();
             Map<String,String> params = ServletUtil.extractParameters(request);
             Object[] args = ServletUtil.getMethodArguments(request , method, params);
+            br = containError(args);
             ServletUtil.processSession(ob, request);
+            if (br != null) {
+                ServletUtil.validationErrorRedirect(request, method , br, controllerList);
+            }
+            
             return method.invoke(ob, args);
-        }catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("asndash");
             throw e;
         }
