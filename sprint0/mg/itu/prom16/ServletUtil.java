@@ -5,12 +5,16 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
 import mg.itu.prom16.validation.annotation.Max;
 import mg.itu.prom16.validation.annotation.Min;
 import mg.itu.prom16.validation.annotation.NotEmpty;
 import mg.itu.prom16.validation.annotation.Validate;
+import mg.itu.prom16.authorization.annotation.AuthorizedRoles;
+import mg.itu.prom16.authorization.annotation.LoginRequired;
+import mg.itu.prom16.authorization.exception.UnauthorizedException;
 import mg.itu.prom16.validation.BindingResult;
 import mg.itu.prom16.validation.FieldError;
 import mg.itu.prom16.validation.annotation.Email;
@@ -261,6 +265,43 @@ public abstract class ServletUtil {
             }
         } else {
             throw new Exception("Annotation ErrorUrl not found on the method :" + method.getName());
+        }
+    }
+
+    public static boolean isAuthenticated(HttpSession session) {
+        Boolean isAuthenticated = (Boolean) session.getAttribute("isAuthenticated");
+        return Boolean.TRUE.equals(isAuthenticated);
+    }
+
+    public static boolean hasRoles(HttpSession session, String[] requiredRoles) {
+        String userRole = (String) session.getAttribute("userRole");
+        if (userRole == null) {
+            return false;
+        }
+        userRole = userRole.toUpperCase();
+
+        for (String role : requiredRoles) {
+            if (userRole.equals(role)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void isAuthorized(Method method, HttpServletRequest request) throws Exception {        
+        HttpSession session = request.getSession();
+        if (method.isAnnotationPresent(LoginRequired.class)) {
+            if (!isAuthenticated(session)) {
+                throw new UnauthorizedException("Access denied, Login required");
+            }
+        } else if (method.isAnnotationPresent(AuthorizedRoles.class)) {
+            if (!isAuthenticated(session)) {
+                throw new UnauthorizedException("Access denied, Login required !");
+            }
+            String[] roles = method.getAnnotation(AuthorizedRoles.class).roles();
+            if (!hasRoles(session, roles)) {
+                throw new UnauthorizedException("Access denied, required roles: " + String.join(", ", roles) + " !!");
+            }
         }
     }
 }
