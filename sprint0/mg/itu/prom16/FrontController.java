@@ -53,12 +53,10 @@ public class FrontController extends HttpServlet {
                 if (map!=null) {
                     Object valueFunction = null;
                     try {
-                        System.out.println("ddddd");
                         valueFunction = map.invoke(request,controllerList);
                     } catch(NotEmptyException | EmailException | MinException | MaxException ee){
                         return;
                     } catch (Exception e) {
-                        System.out.println("ssssss");
                         e.printStackTrace();
                         throw new Error(e);
                     }

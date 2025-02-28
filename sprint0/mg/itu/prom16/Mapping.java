@@ -82,7 +82,7 @@ public class Mapping {
             if (br != null) {
                 ServletUtil.validationErrorRedirect(request, method , br, controllerList);
             }
-            
+            ServletUtil.isAuthorized(method, request);
             return method.invoke(ob, args);
         } catch (Exception e) {
             System.out.println("asndash");
