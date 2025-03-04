@@ -1,6 +1,7 @@
 package mg.itu.prom16;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -299,6 +300,24 @@ public abstract class ServletUtil {
                 throw new UnauthorizedException("Access denied, Login required !");
             }
             String[] roles = method.getAnnotation(AuthorizedRoles.class).roles();
+            if (!hasRoles(session, roles)) {
+                throw new UnauthorizedException("Access denied, required roles: " + String.join(", ", roles) + " !!");
+            }
+        }
+    }
+
+    public static void isAuthorized(Class<?> clazz, HttpServletRequest request) throws Exception {
+        HttpSession session = request.getSession();
+
+        if (clazz.isAnnotationPresent(LoginRequired.class)) {
+            if (!isAuthenticated(session)) {
+                throw new UnauthorizedException("Access denied, Login required");
+            }
+        } else if (clazz.isAnnotationPresent(AuthorizedRoles.class)) {
+            if (!isAuthenticated(session)) {
+                throw new UnauthorizedException("Access denied, Login required !");
+            }
+            String[] roles = clazz.getAnnotation(AuthorizedRoles.class).roles();
             if (!hasRoles(session, roles)) {
                 throw new UnauthorizedException("Access denied, required roles: " + String.join(", ", roles) + " !!");
             }
