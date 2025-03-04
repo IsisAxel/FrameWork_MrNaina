@@ -51,8 +51,10 @@ public class FrontController extends HttpServlet {
                 String path = request.getServletPath().trim();
                 Mapping map = controllerList.get(path);
                 if (map!=null) {
+                    Class<?> controllerClass = map.getControlleClass();
                     Object valueFunction = null;
                     try {
+                        ServletUtil.isAuthorized(controllerClass, request);
                         valueFunction = map.invoke(request,controllerList);
                     } catch(NotEmptyException | EmailException | MinException | MaxException ee){
                         return;
