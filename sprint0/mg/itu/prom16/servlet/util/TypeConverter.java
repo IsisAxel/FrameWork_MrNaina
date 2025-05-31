@@ -1,4 +1,4 @@
-package mg.itu.prom16;
+package mg.itu.prom16.servlet.util;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import mg.itu.prom16.validation.BindingResult;
 
 public abstract class TypeConverter {
     private static final Map<Class<?>, Function<String, Object>> converters = new HashMap<>();

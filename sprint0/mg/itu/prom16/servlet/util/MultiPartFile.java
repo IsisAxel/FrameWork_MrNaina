@@ -1,4 +1,4 @@
-package mg.itu.prom16;
+package mg.itu.prom16.servlet.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,18 +36,16 @@ public class MultiPartFile {
     }
     
 
-    public void buildInstance(Part part, String user) throws Exception {
-        if (user.equals("1859")) {
-            byte[] fileBytes = new byte[(int) part.getSize()];
-            part.getInputStream().read(fileBytes);
+    public void buildInstance(Part part) throws Exception {
+        byte[] fileBytes = new byte[(int) part.getSize()];
+        part.getInputStream().read(fileBytes);
 
-            this.setNom(part.getName());
-            this.setOriginalName(part.getSubmittedFileName());
-            this.setTypeContenu(part.getContentType());
-            this.setSize(part.getSize());
-            this.setInputStream(part.getInputStream());
-            this.setBytes(fileBytes);
-        }
+        this.setNom(part.getName());
+        this.setOriginalName(part.getSubmittedFileName());
+        this.setTypeContenu(part.getContentType());
+        this.setSize(part.getSize());
+        this.setInputStream(part.getInputStream());
+        this.setBytes(fileBytes);
     }
 
 

@@ -1,19 +1,15 @@
-package mg.itu.prom16;
+package mg.itu.prom16.servlet;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
+import mg.itu.prom16.servlet.annotation.RestAPI;
+import mg.itu.prom16.servlet.util.ClassScanner;
+import mg.itu.prom16.servlet.util.ServletUtil;
 import mg.itu.prom16.validation.BindingResult;
-import mg.itu.prom16.validation.exception.EmailException;
-import mg.itu.prom16.validation.exception.MaxException;
-import mg.itu.prom16.validation.exception.MinException;
-import mg.itu.prom16.validation.exception.NotEmptyException;
 
 public class Mapping {
     Class<?> ControlleClass;    
@@ -85,7 +81,6 @@ public class Mapping {
             ServletUtil.isAuthorized(method, request);
             return method.invoke(ob, args);
         } catch (Exception e) {
-            System.out.println("asndash");
             throw e;
         }
     }
