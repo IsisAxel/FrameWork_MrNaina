@@ -1,17 +1,17 @@
-package mg.itu.prom16;
+package mg.itu.prom16.servlet.util;
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 import java.lang.annotation.Annotation;
 import java.util.Map;
+
+import mg.itu.prom16.servlet.Mapping;
+import mg.itu.prom16.servlet.annotation.Post;
+
 import java.util.HashMap;
 
 import java.lang.reflect.Method;
 
-import mg.itu.prom16.Mapping;
 public class ClassScanner {
 
     public static Map<String,Mapping> getMapping(String packageName,Class<? extends Annotation> annotationClass) throws Exception{
@@ -29,7 +29,7 @@ public class ClassScanner {
                         String className = packageName + "." + file.getName().substring(0, file.getName().length() - 6);
                         Class<?> class1=Class.forName(className);
                         if (class1.isAnnotationPresent(annotationClass)) {
-                            map.putAll(getMethods(class1));                            
+                            map.putAll(getMethods(class1,map));                            
                         }
                     }
                 }
@@ -37,20 +37,26 @@ public class ClassScanner {
         }
         return map;
     }    
-    private static Map<String,Mapping> getMethods(Class<?> clazz) throws Exception{
+    private static Map<String,Mapping> getMethods(Class<?> clazz , Map<String,Mapping> allMapping) throws Exception{
         
         Map<String,Mapping> methods = new HashMap<String,Mapping>();
         for (Method method : clazz.getDeclaredMethods()) {
-            mg.itu.prom16.URL an= method.getAnnotation(mg.itu.prom16.URL.class);
+            mg.itu.prom16.servlet.annotation.URL an= method.getAnnotation(mg.itu.prom16.servlet.annotation.URL.class);
             String link = an.url();
             if(an!=null && !link.isEmpty()){
                 String verb = getVerb(method);
+
+                if (allMapping.containsKey(link)) {
+                    if (allMapping.get(link).getMethods().containsKey(verb)) {
+                        throw new Exception("Duplicate url for verb = "+verb+" and link = "+link);         
+                    }
+                }
 
                 if(methods.containsKey(link)){
                     Mapping map = methods.get(link);
                     HashMap<String, Method> apiRequests = map.getMethods();
   
-                    if (!apiRequests.containsKey(verb)) {
+                    if (!apiRequests.containsKey(verb) && !allMapping.get(link).getMethods().containsKey(verb)) {
                        apiRequests.put(verb, method);
                        methods.put(link, map);
                     }

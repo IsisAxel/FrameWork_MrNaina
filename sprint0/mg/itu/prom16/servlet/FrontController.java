@@ -1,13 +1,10 @@
-package mg.itu.prom16;
+package mg.itu.prom16.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -16,11 +13,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
 
-import mg.itu.prom16.ClassScanner;
-import mg.itu.prom16.Controller;
-import mg.itu.prom16.Mapping;
-import mg.itu.prom16.ModelView;
-import mg.itu.prom16.validation.BindingResult;
+import mg.itu.prom16.servlet.annotation.Controller;
+import mg.itu.prom16.servlet.util.ClassScanner;
 import mg.itu.prom16.validation.exception.EmailException;
 import mg.itu.prom16.validation.exception.MaxException;
 import mg.itu.prom16.validation.exception.MinException;
@@ -51,10 +45,8 @@ public class FrontController extends HttpServlet {
                 String path = request.getServletPath().trim();
                 Mapping map = controllerList.get(path);
                 if (map!=null) {
-                    Class<?> controllerClass = map.getControlleClass();
                     Object valueFunction = null;
                     try {
-                        ServletUtil.isAuthorized(controllerClass, request);
                         valueFunction = map.invoke(request,controllerList);
                     } catch(NotEmptyException | EmailException | MinException | MaxException ee){
                         return;
@@ -69,6 +61,7 @@ public class FrontController extends HttpServlet {
                             response.getWriter().write(new Gson().toJson(modelAndView.getData()));
                         } else if (valueFunction instanceof String) {
                             response.getWriter().write(new Gson().toJson(valueFunction));
+                            // response.getWriter().write(new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create().toJson(valueFunction));
                         } else {
                             throw new Error(new ServletException("Unsupported return type"));
                         }

@@ -1,9 +1,13 @@
-package mg.itu.prom16;
+package mg.itu.prom16.servlet.annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Controller{}
+@Target({ElementType.PARAMETER})
+
+public @interface ReqFile {
+    String value() default "";
+}
+

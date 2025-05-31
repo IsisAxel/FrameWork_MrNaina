@@ -2,7 +2,7 @@ package mg.itu.prom16.validation;
 
 import java.util.List;
 
-import mg.itu.prom16.ModelView;
+import mg.itu.prom16.servlet.ModelView;
 
 public class BindingResult {
     ModelView previousPage;
